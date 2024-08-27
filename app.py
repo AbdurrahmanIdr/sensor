@@ -12,7 +12,7 @@ TRIG_PIN = 23
 ECHO_PIN = 24
 
 # DHT Sensor
-DHT_SENSOR = Adafruit_DHT.AM2301  # AM2301A is compatible with AM2301
+DHT_SENSOR = Adafruit_DHT.AM2302  # AM2301A is compatible with AM2301
 DHT_PIN = 18
 
 # Setup GPIO pins
