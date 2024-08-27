@@ -2,7 +2,7 @@
 
 import RPi.GPIO as GPIO
 import time
-import Adafruit_DHT
+import adafruit_dht
 
 # Setup GPIO mode
 GPIO.setmode(GPIO.BCM)
@@ -12,12 +12,13 @@ TRIG_PIN = 23
 ECHO_PIN = 24
 
 # DHT Sensor
-DHT_SENSOR = Adafruit_DHT.AM2302  # AM2301A is compatible with AM2301
-DHT_PIN = 18
+# Create sensor object for AM2301 (compatible with DHT22) on GPIO18 (physical pin 12)
+dht_device = adafruit_dht.DHT22(board.D18)  # Ensure this matches your GPIO pin
 
 # Setup GPIO pins
 GPIO.setup(TRIG_PIN, GPIO.OUT)
 GPIO.setup(ECHO_PIN, GPIO.IN)
+
 
 def get_distance():
     # Send a short pulse to the trigger pin
@@ -37,29 +38,30 @@ def get_distance():
     distance = (elapsed_time * 34300) / 2  # Speed of sound is 34300 cm/s
     return distance
 
+
 def get_temperature_humidity():
-    humidity, temperature = Adafruit_DHT.read(DHT_SENSOR, DHT_PIN)
-    if humidity is not None and temperature is not None:
+    try:
+        temperature = dht_device.temperature
+        humidity = dht_device.humidity
         return temperature, humidity
-    else:
+    except RuntimeError as error:
+        print(f"Error reading from DHT sensor: {error}")
         return None, None
 
 try:
     while True:
         distance = get_distance()
         temperature, humidity = get_temperature_humidity()
-
+        
         print(f"Distance: {distance:.2f} cm")
         if temperature is not None and humidity is not None:
             print(f"Temperature: {temperature:.2f}C  Humidity: {humidity:.2f}%")
         else:
-            print("Failed to retrieve temperature and humidity data.")
-
-        time.sleep(2)  # Wait 2 seconds before next reading
+            print("Failed to retrieve data from sensor.")
+        time.sleep(2)
 
 except KeyboardInterrupt:
     print("Measurement stopped by User")
 
 finally:
     GPIO.cleanup()
-
