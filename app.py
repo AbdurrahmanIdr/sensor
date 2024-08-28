@@ -128,9 +128,10 @@ try:
         distance = get_distance()
         temperature, humidity = get_temperature_humidity()
 
-        print(f"Distance: {distance:.2f} cm")
+        # print(f"Distance: {distance:.2f} cm")
         if temperature is not None and humidity is not None:
-            print(f"Temperature: {temperature:.2f}C  Humidity: {humidity:.2f}%")
+            # print(f"Temperature: {temperature:.2f}C  Humidity: {humidity:.2f}%")
+            print(f'L: {distance:.2f}, T: {temperature:.2f},  H: {humidity:.2f}')
             insert_data(distance, temperature, humidity)
         else:
             print("Failed to retrieve data from sensor.")
