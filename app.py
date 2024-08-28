@@ -5,6 +5,7 @@ import time
 import board
 import adafruit_dht
 import sqlite3
+import requests
 from datetime import datetime, timedelta
 
 # Setup GPIO mode
@@ -23,6 +24,9 @@ GPIO.setup(ECHO_PIN, GPIO.IN)
 
 # SQLite Database setup
 DATABASE = 'sensor_data.db'
+
+# Server endpoint
+SERVER_URL = 'https://your-server.com/api/average_data'  # Replace with your server endpoint
 
 def setup_database():
     """Create a new SQLite database and table if not exist."""
@@ -92,12 +96,20 @@ def calculate_averages():
     return averages
 
 def send_average_data(averages):
-    """Send the average data. This function can be customized for actual sending logic."""
+    """Send the average data to the server."""
     if averages:
         distance_avg, temperature_avg, humidity_avg = averages
-        print(f"Average Distance (last 10 minutes): {distance_avg:.2f} cm")
-        print(f"Average Temperature (last 10 minutes): {temperature_avg:.2f}C")
-        print(f"Average Humidity (last 10 minutes): {humidity_avg:.2f}%")
+        data = {
+            'distance_avg': distance_avg,
+            'temperature_avg': temperature_avg,
+            'humidity_avg': humidity_avg
+        }
+        try:
+            response = requests.post(SERVER_URL, json=data)
+            response.raise_for_status()  # Raise an exception for HTTP errors
+            print(f"Successfully sent average data to server. Status Code: {response.status_code}")
+        except requests.exceptions.RequestException as e:
+            print(f"Error sending data to server: {e}")
     else:
         print("No data available to calculate averages.")
 
