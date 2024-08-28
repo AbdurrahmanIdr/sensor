@@ -26,7 +26,8 @@ GPIO.setup(ECHO_PIN, GPIO.IN)
 DATABASE = 'sensor_data.db'
 
 # Server endpoint
-SERVER_URL = 'https://your-server.com/api/average_data'  # Replace with your server endpoint
+SERVER_URL = 'https://localhost/api/average_data'
+
 
 def setup_database():
     """Create a new SQLite database and table if not exist."""
@@ -43,6 +44,7 @@ def setup_database():
     ''')
     conn.commit()
     conn.close()
+    
 
 def insert_data(distance, temperature, humidity):
     """Insert new data into the database."""
@@ -54,6 +56,7 @@ def insert_data(distance, temperature, humidity):
     ''', (distance, temperature, humidity))
     conn.commit()
     conn.close()
+    
 
 def get_distance():
     """Get distance from the ultrasonic sensor."""
@@ -71,6 +74,7 @@ def get_distance():
     distance = (elapsed_time * 34300) / 2  # Speed of sound is 34300 cm/s
     return distance
 
+
 def get_temperature_humidity():
     """Get temperature and humidity from the DHT sensor."""
     try:
@@ -80,6 +84,7 @@ def get_temperature_humidity():
     except RuntimeError as error:
         print(f"Error reading from DHT sensor: {error}")
         return None, None
+    
 
 def calculate_averages():
     """Calculate the average values of distance, temperature, and humidity from the last 10 minutes."""
@@ -94,6 +99,7 @@ def calculate_averages():
     averages = cursor.fetchone()
     conn.close()
     return averages
+
 
 def send_average_data(averages):
     """Send the average data to the server."""
@@ -112,6 +118,7 @@ def send_average_data(averages):
             print(f"Error sending data to server: {e}")
     else:
         print("No data available to calculate averages.")
+
 
 setup_database()  # Set up the database and table
 
