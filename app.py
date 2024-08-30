@@ -29,8 +29,8 @@ DATABASE = 'sensor_data.db'
 # Server endpoint
 SERVER_URL = 'https://yourserver.com/api/average_data'  # Replace with the correct server URL
 
-API_KEY = 'your_api_key'  # Replace with your Beebotte API key
-SECRET_KEY = 'your_secret_key'  # Replace with your Beebotte Secret key
+API_KEY = '8WLZsC2zC13jOpugXItAgqWn'  # Replace with your Beebotte API key
+SECRET_KEY = 't9lCGP8cQfs6YKr2dnwwQWYnEy93mUl1'  # Replace with your Beebotte Secret key
 
 bbt = BBT(API_KEY, SECRET_KEY)
 
