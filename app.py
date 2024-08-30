@@ -26,8 +26,8 @@ GPIO.setup(ECHO_PIN, GPIO.IN)
 DATABASE = 'sensor_data.db'
 
 # Beebotte API keys
-API_KEY = '8WLZsC2zC13jOpugXItAgqWn'
-SECRET_KEY = 't9lCGP8cQfs6YKr2dnwwQWYnEy93mUl1'
+API_KEY = ''
+SECRET_KEY = ''
 
 bbt = BBT(API_KEY, SECRET_KEY)
 
