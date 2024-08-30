@@ -87,18 +87,23 @@ def get_temperature_humidity():
     except RuntimeError as error:
         print(f"Error reading from DHT sensor: {error}")
         return None, None
-    
+
 
 def calculate_averages():
-    """Calculate the average values of distance, temperature, and humidity from the last 5 minutes."""
+    """Calculate the average values of distance, temperature, and humidity from the last 10 minutes."""
     conn = sqlite3.connect(DATABASE)
     cursor = conn.cursor()
-    five_minutes_ago = datetime.now() - timedelta(minutes=5)
+    ten_minutes_ago = datetime.now() - timedelta(minutes=10)
+    
     cursor.execute('''
-        SELECT AVG(distance), AVG(temperature), AVG(humidity)
+        SELECT 
+            AVG(CASE WHEN distance IS NOT NULL THEN distance END), 
+            AVG(CASE WHEN temperature IS NOT NULL THEN temperature END), 
+            AVG(CASE WHEN humidity IS NOT NULL THEN humidity END)
         FROM sensor_data
         WHERE timestamp >= ?
-    ''', (five_minutes_ago,))
+    ''', (ten_minutes_ago,))
+    
     averages = cursor.fetchone()
     conn.close()
     return averages
