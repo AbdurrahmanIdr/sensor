@@ -7,6 +7,7 @@ import adafruit_dht
 import sqlite3
 import requests
 from datetime import datetime, timedelta
+from beebotte import *
 
 # Setup GPIO mode
 GPIO.setmode(GPIO.BCM)
@@ -27,6 +28,11 @@ DATABASE = 'sensor_data.db'
 
 # Server endpoint
 SERVER_URL = 'https://localhost/api/average_data'
+
+API_KEY = '8WLZsC2zC13jOpugXItAgqWn'
+SECRET_KEY = 't9lCGP8cQfs6YKr2dnwwQWYnEy93mUl1'
+
+bbt = BBT('API_KEY', 'SECRET_KEY')
 
 
 def setup_database():
@@ -123,6 +129,9 @@ def send_average_data(averages):
 setup_database()  # Set up the database and table
 
 try:
+    temp_resource = Resource(bbt, 'pi', 'temperature')
+    humid_resource = Resource(bbt, 'Pi', 'humidity')
+    temp_resource = Resource(bbt, 'Pi', 'level')
     last_average_time = time.time()
     while True:
         distance = get_distance()
@@ -133,6 +142,12 @@ try:
             # print(f"Temperature: {temperature:.2f}C  Humidity: {humidity:.2f}%")
             print(f'L: {distance:.2f}, T: {temperature:.2f},  H: {humidity:.2f}')
             insert_data(distance, temperature, humidity)
+            # Send temperature to Beebotte
+            temp_resource.write(temperature)
+            # Send humidity to Beebotte
+            humid_resource.write(humidity)
+            # Send temperature to Beebotte
+            level_resource.write(distance)
         else:
             print("Failed to retrieve data from sensor.")
         
