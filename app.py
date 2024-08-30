@@ -27,12 +27,13 @@ GPIO.setup(ECHO_PIN, GPIO.IN)
 DATABASE = 'sensor_data.db'
 
 # Server endpoint
-SERVER_URL = 'https://yourserver.com/api/average_data'  # Replace with the correct server URL
+SERVER_URL = 'https://localhost/api/average_data'
 
-API_KEY = '8WLZsC2zC13jOpugXItAgqWn'  # Replace with your Beebotte API key
-SECRET_KEY = 't9lCGP8cQfs6YKr2dnwwQWYnEy93mUl1'  # Replace with your Beebotte Secret key
+API_KEY = '8WLZsC2zC13jOpugXItAgqWn'
+SECRET_KEY = 't9lCGP8cQfs6YKr2dnwwQWYnEy93mUl1'
 
 bbt = BBT(API_KEY, SECRET_KEY)
+
 
 def setup_database():
     """Create a new SQLite database and table if not exist."""
@@ -49,6 +50,7 @@ def setup_database():
     ''')
     conn.commit()
     conn.close()
+    
 
 def insert_data(distance, temperature, humidity):
     """Insert new data into the database."""
@@ -60,6 +62,7 @@ def insert_data(distance, temperature, humidity):
     ''', (distance, temperature, humidity))
     conn.commit()
     conn.close()
+    
 
 def get_distance():
     """Get distance from the ultrasonic sensor."""
@@ -75,8 +78,8 @@ def get_distance():
 
     elapsed_time = end_time - start_time
     distance = (elapsed_time * 34300) / 2  # Speed of sound is 34300 cm/s
-    react 
     return distance
+
 
 def get_temperature_humidity():
     """Get temperature and humidity from the DHT sensor."""
@@ -87,6 +90,7 @@ def get_temperature_humidity():
     except RuntimeError as error:
         print(f"Error reading from DHT sensor: {error}")
         return None, None
+    
 
 def calculate_averages():
     """Calculate the average values of distance, temperature, and humidity from the last 10 minutes."""
@@ -101,6 +105,7 @@ def calculate_averages():
     averages = cursor.fetchone()
     conn.close()
     return averages
+
 
 def send_average_data(averages):
     """Send the average data to the server."""
@@ -120,13 +125,13 @@ def send_average_data(averages):
     else:
         print("No data available to calculate averages.")
 
+
 setup_database()  # Set up the database and table
 
 try:
     temp_resource = Resource(bbt, 'pi', 'temperature')
     humid_resource = Resource(bbt, 'pi', 'humidity')
-    level_resource = Resource(bbt, 'pi', 'level')  # Corrected
-
+    level_resource = Resource(bbt, 'pi', 'level')
     last_average_time = time.time()
     while True:
         distance = get_distance()
@@ -134,24 +139,24 @@ try:
 
         if temperature is not None and humidity is not None:
             print(f'L: {distance:.2f}, T: {temperature:.2f},  H: {humidity:.2f}')
-            insert_data(distance, temperature, humidity)
+            # insert_data(distance, temperature, humidity)
             # Send temperature to Beebotte
             temp_resource.write(temperature)
             # Send humidity to Beebotte
             humid_resource.write(humidity)
             # Send level to Beebotte
             level_resource.write(distance)
+            
         else:
             print("Failed to retrieve data from sensor.")
-
+        
         current_time = time.time()
         if current_time - last_average_time >= 600:  # 600 seconds = 10 minutes
             averages = calculate_averages()
             send_average_data(averages)
-            # last_average_time is correct in the dictionary.
             last_average_time = current_time
-
-        time.sleep(60)  # Wait for 1 minute
+        
+        time.sleep(10)  # Wait for 1 minute
 
 except KeyboardInterrupt:
     print("Measurement stopped by User")
