@@ -5,7 +5,6 @@ import time
 import board
 import adafruit_dht
 import sqlite3
-import requests
 from datetime import datetime, timedelta
 from beebotte import *
 
@@ -26,9 +25,7 @@ GPIO.setup(ECHO_PIN, GPIO.IN)
 # SQLite Database setup
 DATABASE = 'sensor_data.db'
 
-# Server endpoint
-SERVER_URL = 'https://localhost/api/average_data'
-
+# Beebotte API keys
 API_KEY = '8WLZsC2zC13jOpugXItAgqWn'
 SECRET_KEY = 't9lCGP8cQfs6YKr2dnwwQWYnEy93mUl1'
 
@@ -93,35 +90,28 @@ def get_temperature_humidity():
     
 
 def calculate_averages():
-    """Calculate the average values of distance, temperature, and humidity from the last 10 minutes."""
+    """Calculate the average values of distance, temperature, and humidity from the last 5 minutes."""
     conn = sqlite3.connect(DATABASE)
     cursor = conn.cursor()
-    ten_minutes_ago = datetime.now() - timedelta(minutes=10)
+    five_minutes_ago = datetime.now() - timedelta(minutes=5)
     cursor.execute('''
         SELECT AVG(distance), AVG(temperature), AVG(humidity)
         FROM sensor_data
         WHERE timestamp >= ?
-    ''', (ten_minutes_ago,))
+    ''', (five_minutes_ago,))
     averages = cursor.fetchone()
     conn.close()
     return averages
 
 
 def send_average_data(averages):
-    """Send the average data to the server."""
+    """Send the average data to Beebotte."""
     if averages:
         distance_avg, temperature_avg, humidity_avg = averages
-        data = {
-            'distance_avg': distance_avg,
-            'temperature_avg': temperature_avg,
-            'humidity_avg': humidity_avg
-        }
-        try:
-            response = requests.post(SERVER_URL, json=data)
-            response.raise_for_status()  # Raise an exception for HTTP errors
-            print(f"Successfully sent average data to server. Status Code: {response.status_code}")
-        except requests.exceptions.RequestException as e:
-            print(f"Error sending data to server: {e}")
+        print(f"Sending averages - Distance: {distance_avg:.2f} cm, Temperature: {temperature_avg:.2f} °C, Humidity: {humidity_avg:.2f} %")
+        temp_resource.write(temperature_avg)
+        humid_resource.write(humidity_avg)
+        level_resource.write(distance_avg)
     else:
         print("No data available to calculate averages.")
 
@@ -133,30 +123,25 @@ try:
     humid_resource = Resource(bbt, 'pi', 'humidity')
     level_resource = Resource(bbt, 'pi', 'level')
     last_average_time = time.time()
+    
     while True:
         distance = get_distance()
         temperature, humidity = get_temperature_humidity()
 
         if temperature is not None and humidity is not None:
             print(f'L: {distance:.2f}, T: {temperature:.2f},  H: {humidity:.2f}')
-            # insert_data(distance, temperature, humidity)
-            # Send temperature to Beebotte
-            temp_resource.write(temperature)
-            # Send humidity to Beebotte
-            humid_resource.write(humidity)
-            # Send level to Beebotte
-            level_resource.write(distance)
-            
+            insert_data(distance, temperature, humidity)
+
         else:
             print("Failed to retrieve data from sensor.")
         
         current_time = time.time()
-        if current_time - last_average_time >= 600:  # 600 seconds = 10 minutes
+        if current_time - last_average_time >= 300:  # 300 seconds = 5 minutes
             averages = calculate_averages()
             send_average_data(averages)
             last_average_time = current_time
         
-        time.sleep(10)  # Wait for 1 minute
+        time.sleep(30)  # Wait for 30 seconds
 
 except KeyboardInterrupt:
     print("Measurement stopped by User")
